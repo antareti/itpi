@@ -2,118 +2,159 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Живой хаос</title>
+<title>CHAOS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
   height: 100%;
   background: #000;
-  font-family: monospace;
   overflow: hidden;
-}
-
-body {
-  background: radial-gradient(circle at center, #000 0%, #111 100%);
+  font-family: monospace;
   cursor: none;
 }
 
-#text {
-  position: absolute;
+/* центральный текст */
+#core {
+  position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  font-size: clamp(20px, 6vw, 80px);
-  color: #0f0;
-  white-space: nowrap;
-  user-select: none;
-  transition: transform 0.1s, color 0.2s;
-}
-
-section {
-  position: absolute;
-  width: 100%;
-  text-align: center;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: clamp(24px, 5vw, 64px);
-  color: #ff0;
-  opacity: 0;
+  font-size: clamp(28px, 6vw, 90px);
+  color: #00ff88;
   pointer-events: none;
+  transition: transform 0.1s, color 0.2s;
+  text-align: center;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+/* хаотичные изображения */
+.chaos-img {
+  position: fixed;
+  max-width: 340px;
+  pointer-events: none;
+  opacity: 0;
+  animation: chaos 3.2s forwards;
+  mix-blend-mode: difference;
+  filter: contrast(130%) saturate(160%);
+}
+
+@keyframes chaos {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5) rotate(360deg);
+  }
+}
+
+/* пульсация экрана */
+@keyframes pulseBg {
+  0% { background:#000; }
+  50% { background:#050505; }
+  100% { background:#000; }
+}
+
+body.pulse {
+  animation: pulseBg 6s infinite;
 }
 </style>
 </head>
 
-<body>
+<body class="pulse">
 
-<div id="text">ЖИВОЙ ХАОС</div>
+<div id="core">CHAOS</div>
 
-<section id="scene1">Ты двигаешь мышь…</section>
-<section id="scene2">…текст отскакивает!</section>
-<section id="scene3">Каждый клик меняет цвет.</section>
-<section id="scene4">Скролл = новый уровень хаоса.</section>
-<section id="scene5">Ты внутри системы.</section>
-<section id="scene6">Поздно уходить.</section>
-<section id="scene7">Все линии — твоя иллюзия.</section>
-
-<!-- встроенный низкий гул -->
-<audio id="bass" loop>
-<source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+<!-- встроенный гул -->
+<audio id="noise" loop>
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
 </audio>
 
 <script>
-const text = document.getElementById('text');
-const scenes = document.querySelectorAll('section');
-const bass = document.getElementById('bass');
+/* === ТВОИ PNG === */
+const images = [
+  'загружено - 2026-01-05T224423.175.png',
+  'загружено - 2026-01-05T225056.516.png',
+  'загружено - 2026-01-05T231804.301.png',
+  'загружено - 2026-01-05T232153.963.png',
+  'загружено - 2026-01-05T232315.524.png',
+  'загружено - 2026-01-05T232650.360.png',
+  'загружено - 2026-01-05T232714.168.png',
+  'загружено - 2026-01-05T232812.329.png',
+  'загружено - 2026-01-05T232838.749.png',
+  'загружено - 2026-01-05T232903.777.png',
+  'загружено - 2026-01-05T232939.881.png',
+  'загружено - 2026-01-06T180033.656.png',
+  'загружено - 2026-01-06T184409.123.png',
+  'загружено - 2026-01-06T184904.223.png',
+  'загружено - 2026-01-06T185440.044.png',
+  'загружено - 2026-01-06T185532.800.png',
+  'загружено - 2026-01-06T191936.283.png',
+  'загружено - 2026-01-06T194212.418.png',
+  'загружено - 2026-01-06T195508.834.png'
+];
+
+const core = document.getElementById('core');
+const noise = document.getElementById('noise');
 
 let clicks = 0;
-let sceneIndex = 0;
+let soundOn = false;
 
-// включаем бас при первом клике
+/* хаотичное появление картинок */
+function spawnImage() {
+  const img = document.createElement('img');
+  img.src = images[Math.floor(Math.random() * images.length)];
+  img.className = 'chaos-img';
+
+  img.style.left = Math.random() * window.innerWidth + 'px';
+  img.style.top = Math.random() * window.innerHeight + 'px';
+  img.style.transform = `
+    scale(${Math.random() * 1.6 + 0.3})
+    rotate(${Math.random() * 360}deg)
+  `;
+
+  document.body.appendChild(img);
+  setTimeout(() => img.remove(), 3200);
+}
+
+/* автоспавн */
+setInterval(spawnImage, 500);
+
+/* движение мыши */
+document.addEventListener('mousemove', e => {
+  const x = (Math.random() - 0.5) * 80;
+  const y = (Math.random() - 0.5) * 80;
+  core.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+});
+
+/* клики */
 document.addEventListener('click', () => {
   clicks++;
-  if (clicks === 1) {
-    bass.volume = 0.15;
-    bass.play().catch(()=>{});
+
+  if (!soundOn) {
+    noise.volume = 0.18;
+    noise.play().catch(()=>{});
+    soundOn = true;
   }
-  text.style.color = `hsl(${Math.random()*360}, 100%, 50%)`;
-  text.textContent = ["ХАОС","ИМПУЛЬС","СИГНАЛ","ВЗЛОМ"][clicks%4];
-  text.style.animation = 'pulse 0.3s';
-  setTimeout(()=>{text.style.animation = ''},300);
+
+  core.style.color = `hsl(${Math.random()*360},100%,60%)`;
+  core.textContent = ['CHAOS','SIGNAL','NOISE','ERROR','IMPULSE'][clicks % 5];
+
+  for (let i = 0; i < 3; i++) spawnImage();
 });
 
-// движение мыши — текст убегает
-document.addEventListener('mousemove', e => {
-  const x = (Math.random()-0.5)*window.innerWidth/2 + e.clientX/20;
-  const y = (Math.random()-0.5)*window.innerHeight/2 + e.clientY/20;
-  text.style.transform = `translate(${x}px, ${y}px)`;
-});
-
-// скролл — появление сцен
-window.addEventListener('scroll', () => {
-  if (sceneIndex < scenes.length) {
-    scenes[sceneIndex].style.opacity = 1;
-    scenes[sceneIndex].style.animation = 'pulse 0.6s';
-    sceneIndex++;
-  }
-});
-
-// моргание фона
-setInterval(()=>{
-  document.body.style.background = `radial-gradient(circle at ${Math.random()*100}% ${Math.random()*100}%, #000 0%, #111 100%)`;
-},1000);
-
-// уход со вкладки
+/* возврат на вкладку */
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) text.textContent = "Я вижу тебя...";
+  if (!document.hidden) {
+    core.textContent = 'BACK';
+  }
 });
 </script>
 
