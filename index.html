@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Живой хаос</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #000;
+  font-family: monospace;
+  overflow: hidden;
+}
+
+body {
+  background: radial-gradient(circle at center, #000 0%, #111 100%);
+  cursor: none;
+}
+
+#text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(20px, 6vw, 80px);
+  color: #0f0;
+  white-space: nowrap;
+  user-select: none;
+  transition: transform 0.1s, color 0.2s;
+}
+
+section {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(24px, 5vw, 64px);
+  color: #ff0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="text">ЖИВОЙ ХАОС</div>
+
+<section id="scene1">Ты двигаешь мышь…</section>
+<section id="scene2">…текст отскакивает!</section>
+<section id="scene3">Каждый клик меняет цвет.</section>
+<section id="scene4">Скролл = новый уровень хаоса.</section>
+<section id="scene5">Ты внутри системы.</section>
+<section id="scene6">Поздно уходить.</section>
+<section id="scene7">Все линии — твоя иллюзия.</section>
+
+<!-- встроенный низкий гул -->
+<audio id="bass" loop>
+<source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
+<script>
+const text = document.getElementById('text');
+const scenes = document.querySelectorAll('section');
+const bass = document.getElementById('bass');
+
+let clicks = 0;
+let sceneIndex = 0;
+
+// включаем бас при первом клике
+document.addEventListener('click', () => {
+  clicks++;
+  if (clicks === 1) {
+    bass.volume = 0.15;
+    bass.play().catch(()=>{});
+  }
+  text.style.color = `hsl(${Math.random()*360}, 100%, 50%)`;
+  text.textContent = ["ХАОС","ИМПУЛЬС","СИГНАЛ","ВЗЛОМ"][clicks%4];
+  text.style.animation = 'pulse 0.3s';
+  setTimeout(()=>{text.style.animation = ''},300);
+});
+
+// движение мыши — текст убегает
+document.addEventListener('mousemove', e => {
+  const x = (Math.random()-0.5)*window.innerWidth/2 + e.clientX/20;
+  const y = (Math.random()-0.5)*window.innerHeight/2 + e.clientY/20;
+  text.style.transform = `translate(${x}px, ${y}px)`;
+});
+
+// скролл — появление сцен
+window.addEventListener('scroll', () => {
+  if (sceneIndex < scenes.length) {
+    scenes[sceneIndex].style.opacity = 1;
+    scenes[sceneIndex].style.animation = 'pulse 0.6s';
+    sceneIndex++;
+  }
+});
+
+// моргание фона
+setInterval(()=>{
+  document.body.style.background = `radial-gradient(circle at ${Math.random()*100}% ${Math.random()*100}%, #000 0%, #111 100%)`;
+},1000);
+
+// уход со вкладки
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) text.textContent = "Я вижу тебя...";
+});
+</script>
+
+</body>
+</html>
