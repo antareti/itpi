@@ -54,14 +54,48 @@ html, body {
 body.pulse {
   animation: pulseBg 6s infinite;
 }
+
+/* Глитч */
+.glitch {
+  position: relative;
+}
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%;
+  opacity: 0.7;
+}
+.glitch::before { color: red; animation: glitch1 0.3s infinite; }
+.glitch::after { color: cyan; animation: glitch2 0.2s infinite; }
+
+@keyframes glitch1 {
+  0% { transform: translate(2px,-2px); }
+  50% { transform: translate(-2px,2px); }
+  100% { transform: translate(0); }
+}
+@keyframes glitch2 {
+  0% { transform: translate(-2px,2px); }
+  50% { transform: translate(2px,-2px); }
+  100% { transform: translate(0); }
+}
+
+/* Тряска экрана */
+@keyframes shake {
+  0% { transform: translate(0); }
+  25% { transform: translate(3px,-3px); }
+  50% { transform: translate(-3px,3px); }
+  75% { transform: translate(3px,3px); }
+  100% { transform: translate(0); }
+}
+body.shake { animation: shake 0.15s infinite; }
 </style>
 </head>
 
 <body class="pulse">
-
 <div id="core">CLICK</div>
 
-<!-- 🎵 ОСНОВНОЙ ЗВУК -->
 <audio id="bgSound" src="3.mp3" loop preload="auto"></audio>
 
 <script>
@@ -87,12 +121,12 @@ const images = [
   'загружено - 2026-01-06T195508.834.png'
 ];
 
+const words = ['CHAOS','ERROR','NO SIGNAL','WAKE UP','NULL','404','SYSTEM'];
 const core = document.getElementById('core');
 const sound = document.getElementById('bgSound');
-
 let started = false;
 
-/* хаос-картинки */
+/* Спавн хаос-картинок */
 function spawnImage() {
   const img = document.createElement('img');
   img.src = images[Math.floor(Math.random() * images.length)];
@@ -102,36 +136,70 @@ function spawnImage() {
   document.body.appendChild(img);
   setTimeout(() => img.remove(), 3200);
 }
-
 setInterval(spawnImage, 500);
 
-/* мышь */
+/* Движение мыши */
 document.addEventListener('mousemove', () => {
   core.style.transform =
     `translate(calc(-50% + ${(Math.random()-0.5)*80}px),
                calc(-50% + ${(Math.random()-0.5)*80}px))`;
 });
 
-/* 🔊 ПЕРВЫЙ КЛИК = ВЕЧНЫЙ ЗВУК */
+/* Клик для запуска */
 document.addEventListener('click', () => {
   if (!started) {
     sound.volume = 0.25;
     sound.play();
     started = true;
     core.textContent = 'CHAOS';
+    core.classList.add('glitch');
+    core.setAttribute('data-text', 'CHAOS');
+    setTimeout(() => { document.body.style.background = '#100'; core.style.color = '#ff0000'; }, 30000);
   }
-
   core.style.color = `hsl(${Math.random()*360},100%,60%)`;
   for (let i = 0; i < 3; i++) spawnImage();
 });
 
-/* если браузер притормозил — возвращаем звук */
+/* Если звук остановился */
 setInterval(() => {
-  if (started && sound.paused) {
-    sound.play().catch(()=>{});
-  }
+  if (started && sound.paused) { sound.play().catch(()=>{}); }
 }, 2000);
-</script>
 
+/* Рандомные слова */
+setInterval(() => {
+  if (started) core.textContent = words[Math.floor(Math.random()*words.length)];
+}, 1200);
+
+/* Флеши экрана */
+function flash() {
+  document.body.style.background = '#fff';
+  setTimeout(() => document.body.style.background = '#000', 50);
+}
+setInterval(() => { if (started && Math.random() < 0.2) flash(); }, 1500);
+
+/* Деградация звука */
+setInterval(() => {
+  if (started) {
+    sound.playbackRate = 0.8 + Math.random()*0.4;
+    sound.volume = 0.15 + Math.random()*0.2;
+  }
+}, 3000);
+
+/* Двойной клик — тряска экрана */
+document.addEventListener('dblclick', () => {
+  document.body.classList.toggle('shake');
+});
+
+/* Idle-триггер */
+let idle;
+document.addEventListener('mousemove', resetIdle);
+document.addEventListener('click', resetIdle);
+function resetIdle() {
+  clearTimeout(idle);
+  idle = setTimeout(() => {
+    core.textContent = 'YOU ARE STILL HERE';
+  }, 10000);
+}
+</script>
 </body>
 </html>
