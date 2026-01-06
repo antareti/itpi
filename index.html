@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>CHAOS</title>
+<title>CHAOS MAX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -17,6 +17,7 @@ html, body {
   cursor: none;
 }
 
+/* CORE TEXT */
 #core {
   position: fixed;
   left: 50%;
@@ -29,6 +30,7 @@ html, body {
   text-align: center;
 }
 
+/* CHAOS IMAGES */
 .chaos-img {
   position: fixed;
   max-width: 340px;
@@ -45,20 +47,16 @@ html, body {
   100% { opacity: 0; transform: scale(1.5) rotate(360deg); }
 }
 
+/* PULSE BACKGROUND */
 @keyframes pulseBg {
   0% { background:#000; }
   50% { background:#050505; }
   100% { background:#000; }
 }
+body.pulse { animation: pulseBg 6s infinite; }
 
-body.pulse {
-  animation: pulseBg 6s infinite;
-}
-
-/* Глитч */
-.glitch {
-  position: relative;
-}
+/* GLITCH TEXT */
+.glitch { position: relative; }
 .glitch::before,
 .glitch::after {
   content: attr(data-text);
@@ -69,7 +67,6 @@ body.pulse {
 }
 .glitch::before { color: red; animation: glitch1 0.3s infinite; }
 .glitch::after { color: cyan; animation: glitch2 0.2s infinite; }
-
 @keyframes glitch1 {
   0% { transform: translate(2px,-2px); }
   50% { transform: translate(-2px,2px); }
@@ -81,7 +78,7 @@ body.pulse {
   100% { transform: translate(0); }
 }
 
-/* Тряска экрана */
+/* SCREEN SHAKE */
 @keyframes shake {
   0% { transform: translate(0); }
   25% { transform: translate(3px,-3px); }
@@ -90,11 +87,39 @@ body.pulse {
   100% { transform: translate(0); }
 }
 body.shake { animation: shake 0.15s infinite; }
+
+/* CRT / VHS OVERLAY */
+#crt {
+  position: fixed;
+  top:0; left:0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px,
+    transparent 1px, transparent 2px
+  );
+  mix-blend-mode: overlay;
+  animation: crtScan 0.05s infinite linear;
+}
+@keyframes crtScan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 2px; }
+}
+
+/* SELF DESTRUCTION FADE */
+body.fade { animation: fadeOut 5s forwards; }
+@keyframes fadeOut {
+  0% { opacity:1; }
+  100% { opacity:0; }
+}
 </style>
 </head>
 
 <body class="pulse">
 <div id="core">CLICK</div>
+<canvas id="noise"></canvas>
+<div id="crt"></div>
 
 <audio id="bgSound" src="3.mp3" loop preload="auto"></audio>
 
@@ -103,30 +128,20 @@ const images = [
   'загружено - 2026-01-05T224423.175.png',
   'загружено - 2026-01-05T225056.516.png',
   'загружено - 2026-01-05T231804.301.png',
-  'загружено - 2026-01-05T232153.963.png',
-  'загружено - 2026-01-05T232315.524.png',
-  'загружено - 2026-01-05T232650.360.png',
-  'загружено - 2026-01-05T232714.168.png',
-  'загружено - 2026-01-05T232812.329.png',
-  'загружено - 2026-01-05T232838.749.png',
-  'загружено - 2026-01-05T232903.777.png',
-  'загружено - 2026-01-05T232939.881.png',
-  'загружено - 2026-01-06T180033.656.png',
-  'загружено - 2026-01-06T184409.123.png',
-  'загружено - 2026-01-06T184904.223.png',
-  'загружено - 2026-01-06T185440.044.png',
-  'загружено - 2026-01-06T185532.800.png',
-  'загружено - 2026-01-06T191936.283.png',
-  'загружено - 2026-01-06T194212.418.png',
-  'загружено - 2026-01-06T195508.834.png'
+  'загружено - 2026-01-05T232153.963.png'
 ];
-
 const words = ['CHAOS','ERROR','NO SIGNAL','WAKE UP','NULL','404','SYSTEM'];
+
 const core = document.getElementById('core');
 const sound = document.getElementById('bgSound');
-let started = false;
+const canvas = document.getElementById('noise');
+const ctx = canvas.getContext('2d');
 
-/* Спавн хаос-картинок */
+let started = false;
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+/* CHAOS IMAGES SPAWN */
 function spawnImage() {
   const img = document.createElement('img');
   img.src = images[Math.floor(Math.random() * images.length)];
@@ -138,14 +153,13 @@ function spawnImage() {
 }
 setInterval(spawnImage, 500);
 
-/* Движение мыши */
+/* MOUSE MOVE */
 document.addEventListener('mousemove', () => {
-  core.style.transform =
-    `translate(calc(-50% + ${(Math.random()-0.5)*80}px),
-               calc(-50% + ${(Math.random()-0.5)*80}px))`;
+  core.style.transform = `translate(calc(-50% + ${(Math.random()-0.5)*80}px),
+                                     calc(-50% + ${(Math.random()-0.5)*80}px))`;
 });
 
-/* Клик для запуска */
+/* CLICK TO START CHAOS */
 document.addEventListener('click', () => {
   if (!started) {
     sound.volume = 0.25;
@@ -153,53 +167,70 @@ document.addEventListener('click', () => {
     started = true;
     core.textContent = 'CHAOS';
     core.classList.add('glitch');
-    core.setAttribute('data-text', 'CHAOS');
-    setTimeout(() => { document.body.style.background = '#100'; core.style.color = '#ff0000'; }, 30000);
+    core.setAttribute('data-text','CHAOS');
+
+    setTimeout(() => {
+      document.body.style.background = '#100';
+      core.style.color = '#ff0000';
+    },30000);
+
+    // AUTO SELF DESTRUCT AFTER 90s
+    setTimeout(()=>document.body.classList.add('fade'),90000);
   }
   core.style.color = `hsl(${Math.random()*360},100%,60%)`;
-  for (let i = 0; i < 3; i++) spawnImage();
+  for(let i=0;i<3;i++) spawnImage();
 });
 
-/* Если звук остановился */
-setInterval(() => {
-  if (started && sound.paused) { sound.play().catch(()=>{}); }
-}, 2000);
+/* SOUND RECOVERY */
+setInterval(()=>{if(started && sound.paused) sound.play().catch(()=>{});},2000);
 
-/* Рандомные слова */
-setInterval(() => {
-  if (started) core.textContent = words[Math.floor(Math.random()*words.length)];
-}, 1200);
+/* RANDOM WORDS */
+setInterval(()=>{if(started) core.textContent = words[Math.floor(Math.random()*words.length)];},1200);
 
-/* Флеши экрана */
-function flash() {
-  document.body.style.background = '#fff';
-  setTimeout(() => document.body.style.background = '#000', 50);
-}
-setInterval(() => { if (started && Math.random() < 0.2) flash(); }, 1500);
+/* SCREEN FLASH */
+function flash(){document.body.style.background='#fff'; setTimeout(()=>document.body.style.background='#000',50);}
+setInterval(()=>{if(started && Math.random()<0.2) flash();},1500);
 
-/* Деградация звука */
-setInterval(() => {
-  if (started) {
+/* SOUND DEGRADE */
+setInterval(()=>{
+  if(started){
     sound.playbackRate = 0.8 + Math.random()*0.4;
     sound.volume = 0.15 + Math.random()*0.2;
   }
-}, 3000);
+},3000);
 
-/* Двойной клик — тряска экрана */
-document.addEventListener('dblclick', () => {
-  document.body.classList.toggle('shake');
-});
+/* DOUBLE CLICK SHAKE */
+document.addEventListener('dblclick', ()=>{document.body.classList.toggle('shake');});
 
-/* Idle-триггер */
+/* IDLE TRIGGER */
 let idle;
 document.addEventListener('mousemove', resetIdle);
 document.addEventListener('click', resetIdle);
-function resetIdle() {
+function resetIdle(){
   clearTimeout(idle);
-  idle = setTimeout(() => {
-    core.textContent = 'YOU ARE STILL HERE';
-  }, 10000);
+  idle = setTimeout(()=>{core.textContent='YOU ARE STILL HERE';},10000);
 }
+
+/* NOISE CANVAS - STATIC / VHS */
+function drawNoise(){
+  const imageData = ctx.createImageData(canvas.width, canvas.height);
+  const buffer = imageData.data;
+  for(let i=0;i<buffer.length;i+=4){
+    const v = Math.random()*255;
+    buffer[i] = v; // R
+    buffer[i+1] = v; // G
+    buffer[i+2] = v; // B
+    buffer[i+3] = 50; // alpha
+  }
+  ctx.putImageData(imageData,0,0);
+  requestAnimationFrame(drawNoise);
+}
+drawNoise();
+
+window.addEventListener('resize',()=>{
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+});
 </script>
 </body>
 </html>
