@@ -2,15 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>CHAOS MAX</title>
+<title>TOTAL CHAOS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
   background: #000;
   overflow: hidden;
   font-family: monospace;
@@ -20,8 +18,7 @@ html, body {
 /* CORE TEXT */
 #core {
   position: fixed;
-  left: 50%;
-  top: 50%;
+  left: 50%; top: 50%;
   transform: translate(-50%, -50%);
   font-size: clamp(28px, 6vw, 90px);
   color: #00ff88;
@@ -42,12 +39,12 @@ html, body {
 }
 
 @keyframes chaos {
-  0% { opacity: 0; transform: scale(0.2) rotate(0deg); }
-  20% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.5) rotate(360deg); }
+  0% { opacity:0; transform: scale(0.2) rotate(0deg); }
+  20% { opacity:1; }
+  100% { opacity:0; transform: scale(1.5) rotate(360deg); }
 }
 
-/* PULSE BACKGROUND */
+/* PULSE BG */
 @keyframes pulseBg {
   0% { background:#000; }
   50% { background:#050505; }
@@ -55,18 +52,14 @@ html, body {
 }
 body.pulse { animation: pulseBg 6s infinite; }
 
-/* GLITCH TEXT */
+/* GLITCH */
 .glitch { position: relative; }
-.glitch::before,
-.glitch::after {
+.glitch::before, .glitch::after {
   content: attr(data-text);
-  position: absolute;
-  left: 0; top: 0;
-  width: 100%;
-  opacity: 0.7;
+  position: absolute; left:0; top:0; width:100%; opacity:0.7;
 }
-.glitch::before { color: red; animation: glitch1 0.3s infinite; }
-.glitch::after { color: cyan; animation: glitch2 0.2s infinite; }
+.glitch::before { color:red; animation: glitch1 0.3s infinite; }
+.glitch::after { color:cyan; animation: glitch2 0.2s infinite; }
 @keyframes glitch1 {
   0% { transform: translate(2px,-2px); }
   50% { transform: translate(-2px,2px); }
@@ -88,12 +81,10 @@ body.pulse { animation: pulseBg 6s infinite; }
 }
 body.shake { animation: shake 0.15s infinite; }
 
-/* CRT / VHS OVERLAY */
+/* CRT OVERLAY */
 #crt {
-  position: fixed;
-  top:0; left:0;
-  width: 100%;
-  height: 100%;
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
   pointer-events: none;
   background: repeating-linear-gradient(
     rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px,
@@ -103,11 +94,11 @@ body.shake { animation: shake 0.15s infinite; }
   animation: crtScan 0.05s infinite linear;
 }
 @keyframes crtScan {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 2px; }
+  0% { background-position:0 0; }
+  100% { background-position:0 2px; }
 }
 
-/* SELF DESTRUCTION FADE */
+/* SELF DESTRUCT FADE */
 body.fade { animation: fadeOut 5s forwards; }
 @keyframes fadeOut {
   0% { opacity:1; }
@@ -120,7 +111,6 @@ body.fade { animation: fadeOut 5s forwards; }
 <div id="core">CLICK</div>
 <canvas id="noise"></canvas>
 <div id="crt"></div>
-
 <audio id="bgSound" src="3.mp3" loop preload="auto"></audio>
 
 <script>
@@ -136,45 +126,38 @@ const core = document.getElementById('core');
 const sound = document.getElementById('bgSound');
 const canvas = document.getElementById('noise');
 const ctx = canvas.getContext('2d');
-
 let started = false;
+
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
-/* CHAOS IMAGES SPAWN */
+/* SPAWN CHAOS IMAGES */
 function spawnImage() {
   const img = document.createElement('img');
-  img.src = images[Math.floor(Math.random() * images.length)];
+  img.src = images[Math.floor(Math.random()*images.length)];
   img.className = 'chaos-img';
-  img.style.left = Math.random() * innerWidth + 'px';
-  img.style.top = Math.random() * innerHeight + 'px';
+  img.style.left = Math.random()*innerWidth+'px';
+  img.style.top = Math.random()*innerHeight+'px';
   document.body.appendChild(img);
-  setTimeout(() => img.remove(), 3200);
+  setTimeout(()=>img.remove(),3200);
 }
-setInterval(spawnImage, 500);
+setInterval(spawnImage,500);
 
 /* MOUSE MOVE */
-document.addEventListener('mousemove', () => {
+document.addEventListener('mousemove', ()=>{
   core.style.transform = `translate(calc(-50% + ${(Math.random()-0.5)*80}px),
                                      calc(-50% + ${(Math.random()-0.5)*80}px))`;
 });
 
 /* CLICK TO START CHAOS */
-document.addEventListener('click', () => {
-  if (!started) {
-    sound.volume = 0.25;
-    sound.play();
-    started = true;
-    core.textContent = 'CHAOS';
+document.addEventListener('click', ()=>{
+  if(!started){
+    sound.volume=0.25; sound.play();
+    started=true;
+    core.textContent='CHAOS';
     core.classList.add('glitch');
     core.setAttribute('data-text','CHAOS');
-
-    setTimeout(() => {
-      document.body.style.background = '#100';
-      core.style.color = '#ff0000';
-    },30000);
-
-    // AUTO SELF DESTRUCT AFTER 90s
+    setTimeout(()=>{document.body.style.background='#100'; core.style.color='#ff0000';},30000);
     setTimeout(()=>document.body.classList.add('fade'),90000);
   }
   core.style.color = `hsl(${Math.random()*360},100%,60%)`;
@@ -193,44 +176,32 @@ setInterval(()=>{if(started && Math.random()<0.2) flash();},1500);
 
 /* SOUND DEGRADE */
 setInterval(()=>{
-  if(started){
-    sound.playbackRate = 0.8 + Math.random()*0.4;
-    sound.volume = 0.15 + Math.random()*0.2;
-  }
+  if(started){ sound.playbackRate = 0.8 + Math.random()*0.4; sound.volume = 0.15 + Math.random()*0.2; }
 },3000);
 
 /* DOUBLE CLICK SHAKE */
-document.addEventListener('dblclick', ()=>{document.body.classList.toggle('shake');});
+document.addEventListener('dblclick',()=>{document.body.classList.toggle('shake');});
 
 /* IDLE TRIGGER */
 let idle;
-document.addEventListener('mousemove', resetIdle);
-document.addEventListener('click', resetIdle);
-function resetIdle(){
-  clearTimeout(idle);
-  idle = setTimeout(()=>{core.textContent='YOU ARE STILL HERE';},10000);
-}
+document.addEventListener('mousemove',resetIdle);
+document.addEventListener('click',resetIdle);
+function resetIdle(){ clearTimeout(idle); idle=setTimeout(()=>{core.textContent='YOU ARE STILL HERE';},10000); }
 
-/* NOISE CANVAS - STATIC / VHS */
+/* NOISE CANVAS */
 function drawNoise(){
   const imageData = ctx.createImageData(canvas.width, canvas.height);
   const buffer = imageData.data;
   for(let i=0;i<buffer.length;i+=4){
-    const v = Math.random()*255;
-    buffer[i] = v; // R
-    buffer[i+1] = v; // G
-    buffer[i+2] = v; // B
-    buffer[i+3] = 50; // alpha
+    const v=Math.random()*255;
+    buffer[i]=v; buffer[i+1]=v; buffer[i+2]=v; buffer[i+3]=50;
   }
   ctx.putImageData(imageData,0,0);
   requestAnimationFrame(drawNoise);
 }
 drawNoise();
 
-window.addEventListener('resize',()=>{
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-});
+window.addEventListener('resize',()=>{canvas.width=innerWidth; canvas.height=innerHeight;});
 </script>
 </body>
 </html>
