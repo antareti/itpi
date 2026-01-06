@@ -17,7 +17,6 @@ html, body {
   cursor: none;
 }
 
-/* центральный текст */
 #core {
   position: fixed;
   left: 50%;
@@ -30,7 +29,6 @@ html, body {
   text-align: center;
 }
 
-/* хаотичные изображения */
 .chaos-img {
   position: fixed;
   max-width: 340px;
@@ -42,20 +40,11 @@ html, body {
 }
 
 @keyframes chaos {
-  0% {
-    opacity: 0;
-    transform: scale(0.2) rotate(0deg);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.5) rotate(360deg);
-  }
+  0% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.5) rotate(360deg); }
 }
 
-/* пульсация экрана */
 @keyframes pulseBg {
   0% { background:#000; }
   50% { background:#050505; }
@@ -70,15 +59,12 @@ body.pulse {
 
 <body class="pulse">
 
-<div id="core">CHAOS</div>
+<div id="core">CLICK</div>
 
-<!-- встроенный гул -->
-<audio id="noise" loop>
-  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
-</audio>
+<!-- 🎵 ОСНОВНОЙ ЗВУК -->
+<audio id="bgSound" src="3.mp3" loop preload="auto"></audio>
 
 <script>
-/* === ТВОИ PNG === */
 const images = [
   'загружено - 2026-01-05T224423.175.png',
   'загружено - 2026-01-05T225056.516.png',
@@ -102,60 +88,49 @@ const images = [
 ];
 
 const core = document.getElementById('core');
-const noise = document.getElementById('noise');
+const sound = document.getElementById('bgSound');
 
-let clicks = 0;
-let soundOn = false;
+let started = false;
 
-/* хаотичное появление картинок */
+/* хаос-картинки */
 function spawnImage() {
   const img = document.createElement('img');
   img.src = images[Math.floor(Math.random() * images.length)];
   img.className = 'chaos-img';
-
-  img.style.left = Math.random() * window.innerWidth + 'px';
-  img.style.top = Math.random() * window.innerHeight + 'px';
-  img.style.transform = `
-    scale(${Math.random() * 1.6 + 0.3})
-    rotate(${Math.random() * 360}deg)
-  `;
-
+  img.style.left = Math.random() * innerWidth + 'px';
+  img.style.top = Math.random() * innerHeight + 'px';
   document.body.appendChild(img);
   setTimeout(() => img.remove(), 3200);
 }
 
-/* автоспавн */
 setInterval(spawnImage, 500);
 
-/* движение мыши */
-document.addEventListener('mousemove', e => {
-  const x = (Math.random() - 0.5) * 80;
-  const y = (Math.random() - 0.5) * 80;
-  core.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+/* мышь */
+document.addEventListener('mousemove', () => {
+  core.style.transform =
+    `translate(calc(-50% + ${(Math.random()-0.5)*80}px),
+               calc(-50% + ${(Math.random()-0.5)*80}px))`;
 });
 
-/* клики */
+/* 🔊 ПЕРВЫЙ КЛИК = ВЕЧНЫЙ ЗВУК */
 document.addEventListener('click', () => {
-  clicks++;
-
-  if (!soundOn) {
-    noise.volume = 0.18;
-    noise.play().catch(()=>{});
-    soundOn = true;
+  if (!started) {
+    sound.volume = 0.25;
+    sound.play();
+    started = true;
+    core.textContent = 'CHAOS';
   }
 
   core.style.color = `hsl(${Math.random()*360},100%,60%)`;
-  core.textContent = ['CHAOS','SIGNAL','NOISE','ERROR','IMPULSE'][clicks % 5];
-
   for (let i = 0; i < 3; i++) spawnImage();
 });
 
-/* возврат на вкладку */
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    core.textContent = 'BACK';
+/* если браузер притормозил — возвращаем звук */
+setInterval(() => {
+  if (started && sound.paused) {
+    sound.play().catch(()=>{});
   }
-});
+}, 2000);
 </script>
 
 </body>
