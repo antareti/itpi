@@ -13,7 +13,7 @@ html,body{
   height:100%;
   background:#000;
   color:#00ff00;
-  font-family: "Courier New", monospace;
+  font-family:"Courier New", monospace;
   overflow:hidden;
 }
 
@@ -24,16 +24,23 @@ html,body{
   white-space:pre-wrap;
 }
 
+.input-line{
+  display:flex;
+}
+
+.prompt{
+  margin-right:5px;
+}
+
 .cursor{
   display:inline-block;
-  width:10px;
+  width:8px;
   background:#00ff00;
+  margin-left:2px;
   animation:blink 1s infinite;
 }
 
-@keyframes blink{
-  50%{opacity:0;}
-}
+@keyframes blink{50%{opacity:0}}
 
 .file{
   position:fixed;
@@ -78,88 +85,133 @@ const images = [
   'загружено - 2026-01-05T224423.175.png',
   'загружено - 2026-01-05T225056.516.png',
   'загружено - 2026-01-05T231804.301.png',
-  'загружено - 2026-01-05T232153.963.png',
-  'загружено - 2026-01-05T232315.524.png'
+  'загружено - 2026-01-05T232153.963.png'
 ];
 
-let buffer = "";
-let started = false;
+let input = "";
 let target = null;
+let started = false;
 
-const boot = [
-  "[ OK ] loading kernel",
-  "[ OK ] mounting filesystem",
-  "[ OK ] initializing network",
-  "[WARN] external trace detected",
-  "root@unknown:~# access darknet node",
-  "connecting...",
-  "connection established",
-  "locating leaked files..."
-];
-
-function typeLine(text, i=0){
-  if(i < text.length){
-    buffer += text[i];
-    terminal.innerHTML = buffer + '<span class="cursor"></span>';
-    setTimeout(()=>typeLine(text,i+1),20);
-  }else{
-    buffer += "\n";
-  }
+function print(text){
+  terminal.innerHTML += text + "\n";
+  terminal.scrollTop = terminal.scrollHeight;
 }
 
-let line = 0;
-function bootSeq(){
-  if(line < boot.length){
-    typeLine(boot[line]);
-    line++;
-    setTimeout(bootSeq,700);
-  }else{
+function prompt(){
+  terminal.innerHTML += "root@unknown:~# ";
+}
+
+print("[ OK ] kernel loaded");
+print("[ OK ] network online");
+print("[WARN] passive monitoring enabled");
+prompt();
+
+document.addEventListener("keydown",e=>{
+  if(!started){
+    sound.volume=0.2;
+    sound.play();
+    started=true;
+  }
+
+  if(e.key === "Enter"){
+    terminal.innerHTML += input + "\n";
+    handleCommand(input.trim());
+    input="";
+    prompt();
+  }
+  else if(e.key === "Backspace"){
+    input = input.slice(0,-1);
+    terminal.innerHTML = terminal.innerHTML.slice(0,-1);
+  }
+  else if(e.key.length === 1){
+    input += e.key;
+    terminal.innerHTML += e.key;
+  }
+});
+
+function handleCommand(cmd){
+  if(cmd==="help"){
+    print("help   - list commands");
+    print("scan   - scan leaked nodes");
+    print("trace  - trace target ip");
+    print("leak   - extract leaked files");
+    print("clear  - clear terminal");
+    print("exit   - terminate session");
+  }
+  else if(cmd==="scan"){
+    print("scanning darknet nodes...");
+    setTimeout(()=>print("node found :: encrypted"),800);
+    setTimeout(()=>print("hash mismatch detected"),1400);
+  }
+  else if(cmd==="trace"){
+    fakeTrace();
+  }
+  else if(cmd==="leak"){
     spawnTarget();
-    setInterval(spawnFile,1200);
+    print("extracting leaked files...");
+  }
+  else if(cmd==="clear"){
+    terminal.innerHTML="";
+  }
+  else if(cmd==="exit"){
+    print("connection closed");
+  }
+  else{
+    print("command not found");
   }
 }
 
-function spawnFile(){
-  const div = document.createElement("div");
-  div.className = "file";
-  div.style.left = Math.random()*(innerWidth-250)+"px";
-  div.style.top = Math.random()*(innerHeight-250)+"px";
+function fakeTrace(){
+  let ip = `${rnd()}.${rnd()}.${rnd()}.${rnd()}`;
+  print("tracing route to "+ip);
+  let hop = 1;
+  let t = setInterval(()=>{
+    print(hop+"  "+rndIP()+"  "+(Math.random()*100).toFixed(1)+" ms");
+    hop++;
+    if(hop>6){
+      clearInterval(t);
+      print("trace complete");
+    }
+  },500);
+}
 
-  const img = document.createElement("img");
-  const src = images[Math.floor(Math.random()*images.length)];
-  img.src = src;
+function rnd(){return Math.floor(Math.random()*255)}
+function rndIP(){return rnd()+"."+rnd()+"."+rnd()+"."+rnd()}
+
+function spawnTarget(){
+  target = images[Math.floor(Math.random()*images.length)];
+  spawnFile(true);
+}
+
+function spawnFile(isTarget=false){
+  const div = document.createElement("div");
+  div.className="file";
+  div.style.left=Math.random()*(innerWidth-250)+"px";
+  div.style.top=Math.random()*(innerHeight-250)+"px";
+
+  const img=document.createElement("img");
+  const src=isTarget?target:images[Math.floor(Math.random()*images.length)];
+  img.src=src;
   div.appendChild(img);
 
-  div.onclick = e=>{
+  div.onclick=e=>{
     e.stopPropagation();
-    if(src === target){
-      typeLine("ACCESS GRANTED");
+    if(isTarget){
+      print("ACCESS GRANTED :: DATA EXTRACTED");
       spawnTarget();
     }else{
       document.body.classList.add("error");
-      typeLine("TRACE DETECTED");
+      print("TRACE DETECTED");
       setTimeout(()=>document.body.classList.remove("error"),300);
     }
     div.remove();
   };
 
   document.body.appendChild(div);
-  setTimeout(()=>div.remove(),5000);
+  setTimeout(()=>div.remove(),6000);
 }
 
-function spawnTarget(){
-  target = images[Math.floor(Math.random()*images.length)];
-  typeLine("TARGET FILE HASH MATCH REQUIRED");
-}
-
-document.addEventListener("click",()=>{
-  if(!started){
-    sound.volume=0.2;
-    sound.play();
-    started=true;
-    bootSeq();
-  }
-});
+setInterval(()=>spawnFile(),4000);
 </script>
 
 </body>
